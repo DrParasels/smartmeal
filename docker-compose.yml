@@ -1,0 +1,27 @@
+services:
+    postgres:
+      image: postgres:16-alpine
+      container_name: smartmeal-postgres
+      environment:
+        POSTGRES_USER: smartuser
+        POSTGRES_PASSWORD: smartpass
+        POSTGRES_DB: smartmeal
+      ports:
+        - "5433:5432"
+      volumes:
+        - smartmeal_pgdata:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U smartuser -d smartmeal"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
+
+    nats:
+      image: nats:2.10-alpine
+      container_name: stats-nats
+      command: ["-js", "-m", "8222"]
+      ports:
+      - "4222:4222"  # Основной порт для подключения Go/клиентов
+      - "8222:8222"  # Порт мониторинга (HTTP-метрики и состояние)
+volumes:
+  smartmeal_pgdata:

@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: Go Application API
+  description: Шаблон OpenAPI (Swagger) спецификации для Go-сервиса
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Локальный сервер разработки
+
+paths:
+  /daily-meal:
+    get:
+      operationId: listDailyMeals
+      tags: [meals]
+      summary: Получить список продуктов которые добавил пользователь
+      description: Возвращает массив продуктов, которые были добавлены.
+      responses:
+        "400":
+          description: Некорректные входные данные
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+        "200":
+          description: Успешный ответ со списком продуктов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meal"
+        "500":
+          description: Внутренняя ошибка сервера
+
+    post:
+      operationId: createDailyMeal
+      tags: [meals]
+      summary: Добавить новый продукт
+      description: Добавляет продукт на основе переданного JSON-объекта.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDailyMealRequest"
+      responses:
+        "201":
+          description: Продукт успешно добавлен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+        "400":
+          description: Некорректные входные данные
+
+  /daily-meal/{mealId}:
+    get:
+      operationId: getDailyMeal
+      tags: [meals]
+      summary: Получить продукт по id
+      description: Получить продукт по выбранному id
+      parameters:
+        - name: mealId
+          in: path
+          required: true
+          description: Meal identifier
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Детали продукта
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meal"
+        "404":
+          description: Продукт по id не найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    # Схема объекта Продукта (отдается сервером)
+    Meal:
+      type: object
+      required:
+        - id
+        - name
+        - calories
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Курица
+        calories:
+          type: integer
+          example: 300
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-07-27T12:00:00Z"
+
+    # Схема для добавления продукта (принимается сервером)
+    CreateDailyMealRequest:
+      type: object
+      required:
+        - name
+        - calories
+      properties:
+        name:
+          type: string
+          example: Курица
+        calories:
+          type: integer
+          example: 200
+
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: meal not found

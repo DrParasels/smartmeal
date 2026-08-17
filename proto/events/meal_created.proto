@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package smartmeal.events.v1;
+
+option go_package = "github.com/yourname/smartmeal/internal/pb/events/v1;eventsv1";
+
+message MealCreated {
+  int64 meal_id = 1;
+  int32 calories = 2;
+  int64 created_at_unix = 3;
+}
+
