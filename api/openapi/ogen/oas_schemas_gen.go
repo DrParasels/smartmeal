@@ -52,8 +52,7 @@ func (s *Error) SetMessage(val string) {
 	s.Message = val
 }
 
-func (*Error) getDailyMealRes()   {}
-func (*Error) listDailyMealsRes() {}
+func (*Error) getDailyMealRes() {}
 
 // ListDailyMealsInternalServerError is response for ListDailyMeals operation.
 type ListDailyMealsInternalServerError struct{}

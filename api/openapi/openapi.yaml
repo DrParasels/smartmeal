@@ -15,13 +15,6 @@ paths:
       summary: Получить список продуктов которые добавил пользователь
       description: Возвращает массив продуктов, которые были добавлены.
       responses:
-        "400":
-          description: Некорректные входные данные
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
         "200":
           description: Успешный ответ со списком продуктов
           content:

@@ -2,77 +2,56 @@ package main
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
-	api "github.com/yourname/smartmeal/api/ogen"
-	"github.com/yourname/smartmeal/internal/config"
-	"github.com/yourname/smartmeal/internal/handler"
-	"github.com/yourname/smartmeal/internal/logger"
-	"github.com/yourname/smartmeal/internal/storages/sqlc"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/yourname/smartmeal/api"
+	natsout "github.com/yourname/smartmeal/output/nats"
+	"github.com/yourname/smartmeal/service/handler"
+	"github.com/yourname/smartmeal/storages/postgresql"
 )
 
 func main() {
-	cfg := config.Load()
-	log := logger.New(cfg.LogLevel)
+	cfg := CfgLoad()
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	log.Logger = logger
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
-		log.Error("postgres connect failed", "err", err)
+		log.Error().Err(err).Msg("postgres connect failed")
 		os.Exit(1)
 	}
 	defer pool.Close()
+	log.Info().Msg("postgres connected")
 
 	nc, err := nats.Connect(cfg.NATSURL)
 	if err != nil {
-		log.Error("NATS connect failed", "err", err)
+		log.Error().Err(err).Msg("nats connect failed")
 		os.Exit(1)
 	}
-	defer nc.Drain() // поменял с close
+	defer nc.Drain()
+	log.Info().Msg("nats connected")
 
-	query := sqlc.New(pool)
-	h := handler.NewMealHandler(query, nc, cfg.NATSSubject)
+	store := postgresql.New(pool)
+	pub := natsout.NewPublisher(nc, cfg.NATSSubject)
+	h := handler.NewMealHandler(store, pub)
 
-	ogenSrv, err := api.NewServer(h)
+	srv, err := api.NewServer(cfg.HTTPAddr, h, logger)
 	if err != nil {
-		log.Error("api server create failed", "err", err)
+		log.Error().Err(err).Msg("api server create failed")
 		os.Exit(1)
 	}
-
-	httpSrv := &http.Server{
-		Addr:    cfg.HTTPAddr,
-		Handler: ogenSrv,
+	if err := srv.Run(ctx); err != nil {
+		log.Error().Err(err).Msg("http server failed")
+		os.Exit(1)
 	}
-
-	errCh := make(chan error, 1)
-
-	go func() {
-		log.Info("http server starting", "addr", cfg.HTTPAddr)
-		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errCh <- err
-		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		log.Info("shutdown signal received")
-	case err := <-errCh:
-		log.Error("http server failed", "err", err)
-	}
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := httpSrv.Shutdown(shutdownCtx); err != nil {
-		log.Error("http shutdown failed", "err", err)
-	}
-
-	log.Info("shutdown complete")
+	log.Info().Msg("shutdown complete")
 }

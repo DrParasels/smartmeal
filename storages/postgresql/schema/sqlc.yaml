@@ -5,14 +5,14 @@ sql:
   # Настройка для PostgreSQL
   - engine: "postgresql"
     # Путь к директории с SQL-запросами
-    queries: "db/queries"
+    queries: "queries"
     # Путь к файлам миграций/схемы БД
     schema:
-      - "db/migrations/*.up.sql"
+      - "migrations/*.up.sql"
     gen:
       go:
         # Название пакета сгенерированного кода
         package: "sqlc"
         # Выходная директория для сгенерированного кода
-        out: "internal/storages/sqlc"
+        out: "sqlc"
         sql_package: "pgx/v5"

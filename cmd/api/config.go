@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"os"
@@ -11,10 +11,9 @@ type Config struct {
 	NATSURL     string
 	HTTPAddr    string
 	NATSSubject string
-	LogLevel    string
 }
 
-func Load() Config {
+func CfgLoad() Config {
 	_ = godotenv.Load()
 
 	return Config{
@@ -22,7 +21,6 @@ func Load() Config {
 		NATSURL:     getenv("NATS_URL", "nats://localhost:4222"),
 		HTTPAddr:    getenv("HTTP_ADDR", ":8080"),
 		NATSSubject: getenv("NATS_SUBJECT", "updates"),
-		LogLevel:    getenv("LOG_LEVEL", "info"),
 	}
 }
 
