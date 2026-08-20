@@ -1,0 +1,15 @@
+# Secrets
+.env
+
+# Locale notes
+plans.md
+
+# Binary files
+bin/
+*.exe
+*.test
+
+# Generated files
+api/openapi/ogen/
+events/meal_created.pb.go
+storages/postgresql/schema/sqlc/
