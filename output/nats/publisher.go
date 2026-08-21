@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/nats-io/nats.go"
-	eventsv1 "github.com/yourname/smartmeal/events"
+	"github.com/rs/zerolog"
+	eventsv1 "github.com/yourname/smartmeal/events/proto/proto_gen"
 	"github.com/yourname/smartmeal/service/handler"
 	"google.golang.org/protobuf/proto"
 )
@@ -18,7 +19,8 @@ func NewPublisher(nc *nats.Conn, subject string) *Publisher {
 	return &Publisher{nc: nc, subject: subject}
 }
 
-func (p *Publisher) PublishMealCreated(_ context.Context, meal handler.Meal) error {
+func (p *Publisher) PublishMealCreated(ctx context.Context, meal handler.Meal) error {
+	log := zerolog.Ctx(ctx)
 	event := &eventsv1.MealCreated{
 		MealId:        meal.ID,
 		Calories:      meal.Calories,
@@ -28,5 +30,9 @@ func (p *Publisher) PublishMealCreated(_ context.Context, meal handler.Meal) err
 	if err != nil {
 		return err
 	}
+	if err := p.nc.Publish(p.subject, data); err != nil {
+		return err
+	}
+	log.Debug().Int64("meal_id", meal.ID).Msg("meal event published")
 	return p.nc.Publish(p.subject, data)
 }

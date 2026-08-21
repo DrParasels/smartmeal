@@ -41,6 +41,7 @@ func (s *Server) Run(ctx context.Context) error {
 	case <-ctx.Done():
 		log.Info().Msg("shutdown signal received")
 	case err := <-errCh:
+		log.Error().Err(err).Msg("http server failed")
 		return err
 	}
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

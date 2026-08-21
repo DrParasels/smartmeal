@@ -63,6 +63,7 @@ func (h *MealHandler) CreateDailyMeal(ctx context.Context, req *api.CreateDailyM
 		log.Error().Err(err).Msg("failed to publish meal event")
 		return nil, err
 	}
+	log.Info().Int64("meal_id", meal.ID).Msg("meal created")
 	return toOgenMeal(meal), nil
 }
 

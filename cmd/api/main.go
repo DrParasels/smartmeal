@@ -37,7 +37,12 @@ func main() {
 		log.Error().Err(err).Msg("nats connect failed")
 		os.Exit(1)
 	}
-	defer nc.Drain()
+	defer func() {
+		if err := nc.Drain(); err != nil {
+			log.Error().Err(err).Msg("nats drain failed")
+		}
+	}()
+
 	log.Info().Msg("nats connected")
 
 	store := postgresql.New(pool)

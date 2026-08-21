@@ -11,5 +11,5 @@ bin/
 
 # Generated files
 api/openapi/ogen/
-events/meal_created.pb.go
+events/proto/proto_gen
 storages/postgresql/schema/sqlc/

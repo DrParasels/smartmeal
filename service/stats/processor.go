@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	eventsv1 "github.com/yourname/smartmeal/events"
+	eventsv1 "github.com/yourname/smartmeal/events/proto/proto_gen"
 )
 
 type StatsStore interface {

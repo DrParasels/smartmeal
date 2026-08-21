@@ -11,7 +11,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	eventsv1 "github.com/yourname/smartmeal/events"
+	eventsv1 "github.com/yourname/smartmeal/events/proto/proto_gen"
 	"github.com/yourname/smartmeal/service/stats"
 	"github.com/yourname/smartmeal/storages/postgresql"
 	"google.golang.org/protobuf/proto"
@@ -31,6 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer pool.Close()
+	log.Info().Msg("postgres connected")
 
 	nc, err := nats.Connect(cfg.NATSURL)
 	if err != nil {
@@ -42,7 +43,8 @@ func main() {
 			log.Error().Err(err).Msg("nats drain failed")
 		}
 	}()
-
+	log.Info().Msg("nats connected")
+	
 	store := postgresql.New(pool)
 	p := stats.NewMealStats(store)
 
@@ -60,12 +62,12 @@ func main() {
 			Int32("calories", event.Calories).
 			Logger().
 			WithContext(msgCtx)
-
+		log := zerolog.Ctx(msgCtx)
 		if err := p.HandleMealCreated(msgCtx, &event); err != nil {
 			log.Error().Err(err).Msg("handle meal created failed")
 			return
 		}
-		log.Debug().Int32("calories", event.Calories).Msg("meal processed")
+		log.Debug().Msg("meal processed")
 	})
 	if err != nil {
 		log.Error().Str("subject", cfg.NATSSubject).Err(err).Msg("NATS subscribe failed")

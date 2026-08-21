@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package smartmeal.events.v1;
 
-option go_package = "github.com/yourname/smartmeal/events;eventsv1";
+option go_package = "github.com/yourname/smartmeal/events/proto/proto_gen;eventsv1";
 
 message MealCreated {
   int64 meal_id = 1;
